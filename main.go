@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	pb "github.com/GlennTatum/protofiles/gtfs"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"io"
@@ -12,16 +11,22 @@ import (
 	"net/http"
 )
 
-func main() {
+type Transit struct {
+	accessToken string
+}
+
+func (t *Transit) getURL(url string) pb.FeedMessage {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace", nil)
+	fmt.Println(client)
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	req.Header.Add("x-api-key", "ACCESS_KEY")
+	req.Header.Add("x-api-key", t.accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,8 +49,39 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m := protojson.Format(feed)
+	// For a json response
+	// j := protojson.Format(feed)
+	// return j
 
-	fmt.Println(m)
+	// For a protobuf response
+
+	return *feed
+
+}
+
+func main() {
+
+	t := Transit{"ACCESS_KEY"}
+
+	message := t.getURL("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
+
+	for _, entity := range message.Entity {
+
+		// If the field is empty while reading the protobuf a SIGSEGV event will occur
+
+		// When looping over FeedMessage the parent field should be referenced
+
+		if entity.TripUpdate != nil {
+			fmt.Println(*entity.TripUpdate.Trip.RouteId)
+
+		}
+
+		if entity.Vehicle != nil {
+			fmt.Println(*entity.Vehicle.StopId)
+		}
+
+	}
+
+	// Next steps: Parse json add MTA struct and functions
 
 }
