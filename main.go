@@ -9,6 +9,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
+)
+
+const (
+	ACE = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
 )
 
 type Transit struct {
@@ -63,25 +68,35 @@ func main() {
 
 	t := Transit{"ACCESS_KEY"}
 
-	message := t.getURL("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
+	message := t.getURL(ACE)
 
 	for _, entity := range message.Entity {
 
-		// If the field is empty while reading the protobuf a SIGSEGV event will occur
-
 		// When looping over FeedMessage the parent field should be referenced
 
-		if entity.TripUpdate != nil {
+		/*if entity.TripUpdate != nil {
 			fmt.Println(*entity.TripUpdate.Trip.RouteId)
 
-		}
+			if *entity.TripUpdate.Trip.RouteId == "A" {
+				fmt.Println("Route ID A")
+			}
 
-		if entity.Vehicle != nil {
-			fmt.Println(*entity.Vehicle.StopId)
+		}*/
+
+		if entity.TripUpdate != nil {
+
+			tripUpdate := entity.TripUpdate
+			stopTimeUpdate := tripUpdate.StopTimeUpdate
+
+			// stopTimeUpdate is a nested field
+
+			for _, stop := range stopTimeUpdate {
+
+				if *stop.StopId == "A02N" {
+					fmt.Println("207th Street Station", time.Unix(*stop.Arrival.Time, 0))
+				}
+			}
 		}
 
 	}
-
-	// Next steps: Parse json add MTA struct and functions
-
 }
