@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+option go_package = "transit/user/gotransit";
+
+import public "gtfs-realtime.proto";
+import public "nyct-realtime.proto";

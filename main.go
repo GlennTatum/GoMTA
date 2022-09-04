@@ -3,17 +3,13 @@ package main
 import (
 	"fmt"
 
-	pb "github.com/GlennTatum/protofiles/gtfs"
+	pb "transit/user/gotransit/mta"
+
 	"google.golang.org/protobuf/proto"
 
 	"io"
 	"log"
 	"net/http"
-	"time"
-)
-
-const (
-	ACE = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
 )
 
 type Transit struct {
@@ -68,35 +64,20 @@ func main() {
 
 	t := Transit{"ACCESS_KEY"}
 
-	message := t.getURL(ACE)
+	message := t.getURL("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
 
 	for _, entity := range message.Entity {
 
+		// If the field is empty while reading the protobuf a SIGSEGV event will occur
+
 		// When looping over FeedMessage the parent field should be referenced
 
-		/*if entity.TripUpdate != nil {
-			fmt.Println(*entity.TripUpdate.Trip.RouteId)
+		fmt.Println(entity)
 
-			if *entity.TripUpdate.Trip.RouteId == "A" {
-				fmt.Println("Route ID A")
-			}
-
-		}*/
-
-		if entity.TripUpdate != nil {
-
-			tripUpdate := entity.TripUpdate
-			stopTimeUpdate := tripUpdate.StopTimeUpdate
-
-			// stopTimeUpdate is a nested field
-
-			for _, stop := range stopTimeUpdate {
-
-				if *stop.StopId == "A02N" {
-					fmt.Println("207th Street Station", time.Unix(*stop.Arrival.Time, 0))
-				}
-			}
-		}
+		//fmt.Println(protojson.Unmarshal(entity))
 
 	}
+
+	// Next steps: Parse json add MTA struct and functions
+
 }
