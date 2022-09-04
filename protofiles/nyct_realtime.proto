@@ -12,7 +12,7 @@ package transit_realtime;
 
 import "gtfs_realtime.proto";
 
-option go_package = "github.com/GlennTatum/gotransit/mta";
+option go_package = "github.com/GlennTatum/GoMTA/mta";
 
 
 message TripReplacementPeriod {

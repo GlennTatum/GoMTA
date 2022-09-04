@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-option go_package = "github.com/GlennTatum/gotransit/mta";
+option go_package = "github.com/GlennTatum/GoMTA/mta";
 
 import public "gtfs_realtime.proto";
 import public "nyct_realtime.proto";

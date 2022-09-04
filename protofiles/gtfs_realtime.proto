@@ -26,7 +26,7 @@ syntax = "proto2";
 
 package transit_realtime;
 
-option go_package = "github.com/GlennTatum/gotransit/mta";
+option go_package = "github.com/GlennTatum/GoMTA/mta";
 
 // The contents of a feed message.
 // A feed is a continuous stream of feed messages. Each message in the stream is
