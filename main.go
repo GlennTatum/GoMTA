@@ -12,6 +12,12 @@ import (
 	"net/http"
 )
 
+// Reading from the stops.txt file would be a better option
+
+var lines = map[string]string{
+	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
+}
+
 type Transit struct {
 	accessToken string
 }
@@ -19,8 +25,6 @@ type Transit struct {
 func (t *Transit) getURL(url string) pb.FeedMessage {
 
 	client := &http.Client{}
-
-	fmt.Println(client)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -60,24 +64,52 @@ func (t *Transit) getURL(url string) pb.FeedMessage {
 
 }
 
+func (t *Transit) getSubwayStop(line string, stop string) {
+	feed := t.getURL(lines[line])
+
+	for _, entity := range feed.Entity {
+
+		if entity.TripUpdate != nil {
+
+			tripUpdate := entity.TripUpdate
+
+			stopTimeUpdate := tripUpdate.StopTimeUpdate
+
+			for _, s := range stopTimeUpdate {
+
+				if *s.StopId == stop {
+					fmt.Println("Found", stop)
+				}
+			}
+		}
+
+	}
+}
+
+func (t *Transit) getLineStops(line string) {
+	feed := t.getURL(lines[line])
+
+	for _, entity := range feed.Entity {
+		if entity.TripUpdate != nil {
+
+			tripUpdate := entity.TripUpdate
+
+			stopTimeUpdate := tripUpdate.StopTimeUpdate
+
+			for _, s := range stopTimeUpdate {
+				fmt.Println(*s.StopId)
+			}
+		}
+	}
+}
+
 func main() {
 
 	t := Transit{"ACCESS_KEY"}
 
-	message := t.getURL("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
+	// t.getSubwayStop("ACE", "A02N")
 
-	for _, entity := range message.Entity {
-
-		// If the field is empty while reading the protobuf a SIGSEGV event will occur
-
-		// When looping over FeedMessage the parent field should be referenced
-
-		fmt.Println(entity)
-
-		//fmt.Println(protojson.Unmarshal(entity))
-
-	}
+	t.getLineStops("ACE")
 
 	// Next steps: Parse json add MTA struct and functions
-
 }
