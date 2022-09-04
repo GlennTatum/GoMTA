@@ -1,4 +1,4 @@
-module transit/user/gotransit
+module github.com/GlennTatum/GoMTA
 
 go 1.19
 

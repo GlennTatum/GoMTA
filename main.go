@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	pb "transit/user/gotransit/mta"
+	pb "github.com/GlennTatum/GoMTA/mta"
 
 	"google.golang.org/protobuf/proto"
 
