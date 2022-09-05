@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	pb "github.com/GlennTatum/GoMTA/mta"
 
@@ -18,20 +19,32 @@ var lines = map[string]string{
 	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
 }
 
-type Transit struct {
+type Client struct {
 	accessToken string
+	http        *http.Client
 }
 
-func (t *Transit) getURL(url string) pb.FeedMessage {
+func NewClient(token string) *Client {
+	base := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
-	client := &http.Client{}
+	return &Client{
+		accessToken: token,
+		http:        base,
+	}
+}
+
+func (c *Client) getURL(url string) pb.FeedMessage {
+
+	client := c.http
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	req.Header.Add("x-api-key", t.accessToken)
+	req.Header.Add("x-api-key", c.accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,8 +77,8 @@ func (t *Transit) getURL(url string) pb.FeedMessage {
 
 }
 
-func (t *Transit) getSubwayStop(line string, stop string) {
-	feed := t.getURL(lines[line])
+func (c *Client) SubwayStop(line string, stop string) {
+	feed := c.getURL(lines[line])
 
 	for _, entity := range feed.Entity {
 
@@ -86,8 +99,8 @@ func (t *Transit) getSubwayStop(line string, stop string) {
 	}
 }
 
-func (t *Transit) getLineStops(line string) {
-	feed := t.getURL(lines[line])
+func (c *Client) LineStops(line string) {
+	feed := c.getURL(lines[line])
 
 	for _, entity := range feed.Entity {
 		if entity.TripUpdate != nil {
@@ -105,11 +118,13 @@ func (t *Transit) getLineStops(line string) {
 
 func main() {
 
-	t := Transit{"ACCESS_KEY"}
+	t := NewClient(
+		"ACCESS_KEY",
+	)
 
-	// t.getSubwayStop("ACE", "A02N")
+	t.SubwayStop("ACE", "A02N")
 
-	t.getLineStops("ACE")
+	t.LineStops("ACE")
 
 	// Next steps: Parse json add MTA struct and functions
 }
