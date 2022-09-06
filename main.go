@@ -24,6 +24,12 @@ type Client struct {
 	http        *http.Client
 }
 
+type StopTimeUpdate struct {
+	stopId string
+	time   int64
+	// track  string
+}
+
 func NewClient(token string) *Client {
 	base := &http.Client{
 		Timeout: time.Second * 10,
@@ -77,8 +83,10 @@ func (c *Client) getURL(url string) pb.FeedMessage {
 
 }
 
-func (c *Client) SubwayStop(line string, stop string) {
+func (c *Client) SubwayStop(line string, stop string) map[string]StopTimeUpdate {
 	feed := c.getURL(lines[line])
+
+	resp := map[string]StopTimeUpdate{}
 
 	for _, entity := range feed.Entity {
 
@@ -91,16 +99,23 @@ func (c *Client) SubwayStop(line string, stop string) {
 			for _, s := range stopTimeUpdate {
 
 				if *s.StopId == stop {
-					fmt.Println("Found", stop)
+					resp[*tripUpdate.Trip.TripId] = StopTimeUpdate{*s.StopId, *s.Arrival.Time}
 				}
 			}
 		}
 
 	}
+
+	return resp
 }
 
-func (c *Client) LineStops(line string) {
+func (c *Client) LineStops(line string) map[string]string {
+
+	// Get all of the stations at an API endpoint
+
 	feed := c.getURL(lines[line])
+
+	resp := map[string]string{}
 
 	for _, entity := range feed.Entity {
 		if entity.TripUpdate != nil {
@@ -110,10 +125,12 @@ func (c *Client) LineStops(line string) {
 			stopTimeUpdate := tripUpdate.StopTimeUpdate
 
 			for _, s := range stopTimeUpdate {
-				fmt.Println(*s.StopId)
+				resp[*s.StopId] = *tripUpdate.Trip.RouteId
 			}
 		}
 	}
+
+	return resp
 }
 
 func main() {
@@ -122,9 +139,15 @@ func main() {
 		"ACCESS_KEY",
 	)
 
-	t.SubwayStop("ACE", "A02N")
+	stop := t.SubwayStop("ACE", "A02N")
 
-	t.LineStops("ACE")
+	ls := t.LineStops("ACE")
+
+	fmt.Println(ls)
+
+	fmt.Println()
+
+	fmt.Println(stop)
 
 	// Next steps: Parse json add MTA struct and functions
 }
