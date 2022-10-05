@@ -107,6 +107,11 @@ type DateTime struct {
 	datetime string
 }
 
+type FormattedStopTimeUpdate struct {
+	datetime DateTime
+	stop     Stop
+}
+
 func UnixtoDateTime(t int) string {
 
 	datetime := time.Unix(int64(t), 0)
@@ -115,7 +120,7 @@ func UnixtoDateTime(t int) string {
 
 }
 
-func (stc *StopTimeUpdate) filter(stopid string) map[DateTime]Stop {
+func (stc *StopTimeUpdate) filter(stopid string) []FormattedStopTimeUpdate {
 
 	feed := stc.message
 
@@ -142,7 +147,7 @@ func (stc *StopTimeUpdate) filter(stopid string) map[DateTime]Stop {
 
 	}
 
-	ol := make(map[DateTime]Stop)
+	ol := make([]FormattedStopTimeUpdate, 0, len(ul))
 
 	keys := make([]int, 0, len(ul))
 
@@ -154,7 +159,7 @@ func (stc *StopTimeUpdate) filter(stopid string) map[DateTime]Stop {
 
 	for i, _ := range keys {
 
-		ol[DateTime{UnixtoDateTime(keys[i])}] = Stop{stopid}
+		ol = append(ol, FormattedStopTimeUpdate{DateTime{UnixtoDateTime(keys[i])}, Stop{stopid}})
 	}
 
 	return ol
@@ -168,6 +173,10 @@ func main() {
 
 	mta := mtaclient.getFeed("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
 
-	fmt.Println(mta.stopTimeUpdate.filter("A02N"))
+	x := mta.stopTimeUpdate.filter("A02N")
+
+	for _, item := range x {
+		fmt.Println(item)
+	}
 
 }
