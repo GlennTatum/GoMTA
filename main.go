@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	pb "github.com/GlennTatum/GoMTA/mta"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 
 	"io"
 	"log"
 	"net/http"
 )
-
-// Reading from the stops.txt file would be a better option
 
 var lines = map[string]string{
 	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
@@ -24,10 +23,17 @@ type Client struct {
 	http        *http.Client
 }
 
+type Message struct {
+	header         Header
+	stopTimeUpdate StopTimeUpdate
+}
+
+type Header struct {
+	message pb.FeedMessage
+}
+
 type StopTimeUpdate struct {
-	stopId string
-	time   int64
-	// track  string
+	message pb.FeedMessage
 }
 
 func NewClient(token string) *Client {
@@ -41,7 +47,7 @@ func NewClient(token string) *Client {
 	}
 }
 
-func (c *Client) getURL(url string) pb.FeedMessage {
+func (c *Client) recieve(url string) []byte {
 
 	client := c.http
 
@@ -67,26 +73,53 @@ func (c *Client) getURL(url string) pb.FeedMessage {
 		log.Fatal(err)
 	}
 
+	return body
+
+}
+
+func (c *Client) getFeed(url string) Message {
+
+	resp := c.recieve(url)
+
 	feed := &pb.FeedMessage{}
-	err = proto.Unmarshal(body, feed)
+	err := proto.Unmarshal(resp, feed)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// For a json response
-	// j := protojson.Format(feed)
-	// return j
-
-	// For a protobuf response
-
-	return *feed
+	return Message{header: Header{*feed}, stopTimeUpdate: StopTimeUpdate{*feed}}
 
 }
 
-func (c *Client) SubwayStop(line string, stop string) map[string]StopTimeUpdate {
-	feed := c.getURL(lines[line])
+type TripId struct {
+	tripid string
+}
 
-	resp := map[string]StopTimeUpdate{}
+type Stop struct {
+	stop string
+}
+
+type ArrivalTime struct {
+	arrivalTime int
+}
+
+type DateTime struct {
+	datetime string
+}
+
+func UnixtoDateTime(t int) string {
+
+	datetime := time.Unix(int64(t), 0)
+
+	return datetime.String()
+
+}
+
+func (stc *StopTimeUpdate) filter(stopid string) map[DateTime]Stop {
+
+	feed := stc.message
+
+	ul := make(map[ArrivalTime]Stop)
 
 	for _, entity := range feed.Entity {
 
@@ -98,56 +131,43 @@ func (c *Client) SubwayStop(line string, stop string) map[string]StopTimeUpdate 
 
 			for _, s := range stopTimeUpdate {
 
-				if *s.StopId == stop {
-					resp[*tripUpdate.Trip.TripId] = StopTimeUpdate{*s.StopId, *s.Arrival.Time}
+				if *s.StopId == stopid {
+
+					ul[ArrivalTime{int(*s.Arrival.Time)}] = Stop{*s.StopId}
+
 				}
 			}
+
 		}
 
 	}
 
-	return resp
-}
+	ol := make(map[DateTime]Stop)
 
-func (c *Client) LineStops(line string) map[string]string {
+	keys := make([]int, 0, len(ul))
 
-	// Get all of the stations at an API endpoint
-
-	feed := c.getURL(lines[line])
-
-	resp := map[string]string{}
-
-	for _, entity := range feed.Entity {
-		if entity.TripUpdate != nil {
-
-			tripUpdate := entity.TripUpdate
-
-			stopTimeUpdate := tripUpdate.StopTimeUpdate
-
-			for _, s := range stopTimeUpdate {
-				resp[*s.StopId] = *tripUpdate.Trip.RouteId
-			}
-		}
+	for k := range ul {
+		keys = append(keys, k.arrivalTime)
 	}
 
-	return resp
+	sort.Ints(keys)
+
+	for i, _ := range keys {
+
+		ol[DateTime{UnixtoDateTime(keys[i])}] = Stop{stopid}
+	}
+
+	return ol
 }
 
 func main() {
 
-	t := NewClient(
+	mtaclient := NewClient(
 		"ACCESS_KEY",
 	)
 
-	stop := t.SubwayStop("ACE", "A02N")
+	mta := mtaclient.getFeed("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace")
 
-	ls := t.LineStops("ACE")
+	fmt.Println(mta.stopTimeUpdate.filter("A02N"))
 
-	fmt.Println(ls)
-
-	fmt.Println()
-
-	fmt.Println(stop)
-
-	// Next steps: Parse json add MTA struct and functions
 }
