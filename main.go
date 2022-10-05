@@ -14,10 +14,6 @@ import (
 	"net/http"
 )
 
-var lines = map[string]string{
-	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
-}
-
 type Client struct {
 	accessToken string
 	http        *http.Client
