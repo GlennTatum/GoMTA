@@ -10,7 +10,7 @@ Go bindings to the Metropolitan Transportation Authority General Transit Feed Sp
 
 <h3>🔑 Authentication</h3>
 
-Before using this library make sure to sign up a the MTA's developer portal and get an access token from [https://api.mta.info/#/landing](https://api.mta.info/#/landing)
+Before using this library make sure to sign up at the MTA's developer portal and get an access token from [https://api.mta.info/#/landing](https://api.mta.info/#/landing)
 
 <br>
 
@@ -24,7 +24,7 @@ Currently only Subway Realtime Feeds are only supported.
 
 <h3> 🚏 Stations </h3>
 
-Under the google_transit folder the MTA GTFS dataset is present. For general usage the stops.txt folder displays stop codes for all subway stops of the NYC Subway system. More info about how the GTFS files work can be found here [https://developers.google.com/transit/gtfs/reference](https://developers.google.com/transit/gtfs/reference)
+Under the google_transit folder the MTA GTFS dataset is present. For general usage the stops.txt folder displays stop codes for all of the subway stops of the NYC Subway system. More info about how the GTFS files work can be found here [https://developers.google.com/transit/gtfs/reference](https://developers.google.com/transit/gtfs/reference)
 
 
 <br>
