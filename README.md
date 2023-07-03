@@ -32,30 +32,23 @@ Under the google_transit folder the MTA GTFS dataset is present. For general usa
 <h3>Example</h3>
 
 ```go
+// Initialize the client
 
-func main() {
+mtaclient := NewClient("ACCESS_KEY",)
 
-    // Initialize the client
+// Specify the URL
 
-	mtaclient := NewClient(
-		"ACCESS_KEY",
-	)
+url := "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
 
-    // Specify the URL
+// Retrieve the Feed
 
-    url := "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
+mta := mtaclient.getFeed(url)
 
-    // Retrieve the Feed
+// Filter
 
-	mta := mtaclient.getFeed(url)
+x := mta.stopTimeUpdate.filter("A02N")
 
-    // Filter
-
-	x := mta.stopTimeUpdate.filter("A02N")
-
-	for _, item := range x {
-		fmt.Println(item)
-	}
-
+for _, item := range x {
+	fmt.Println(item)
 }
 ```
